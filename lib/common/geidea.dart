@@ -128,74 +128,109 @@ class GeideapayPlugin {
   /// [checkoutRequestBody] - the checkout request body
   ///
 
-  Future<OrderApiResponse> checkout(
-      {required BuildContext context,
-      required CheckoutOptions checkoutOptions}) async {
-    _performChecks();
+/// Processes a checkout operation with the provided options
+///
+/// Displays a credit card entry screen and handles the authentication flow
+/// 
+/// [context] - The BuildContext for navigating between screens
+/// [checkoutOptions] - Configuration options for the checkout process
+/// 
+/// Returns an OrderApiResponse with the result of the checkout operation
+Future<OrderApiResponse> checkout({
+  required BuildContext context,
+  required CheckoutOptions checkoutOptions,
+}) async {
+  _performChecks();
 
-    AuthenticationApiResponse? authenticationApiResponse;
-    CheckoutRequestBody? checkoutRequestBodyOfCardComplete;
+  AuthenticationApiResponse? authenticationApiResponse;
+  CheckoutRequestBody? checkoutRequestBody;
 
+  try {
     CreditCardScreen creditCardScreen = CreditCardScreen(
       checkoutOptions: checkoutOptions,
       onCardEditComplete: (PaymentCard paymentCard) async {
-        authenticationApiResponse = null;
+        try {
+          // Reset authentication response when card details change
+          authenticationApiResponse = null;
 
-        checkoutRequestBodyOfCardComplete =
-            CheckoutRequestBody(checkoutOptions, paymentCard);
-
-        checkoutRequestBodyOfCardComplete!
-            .updateDirectSessionRequestBody(publicKey, apiPassword);
-        Utils.printLog(
-            checkoutRequestBodyOfCardComplete!.directSessionRequestBody);
-        DirectSessionApiResponse directSessionApiResponse = await createSession(
-          directSessionRequestBody:
-              checkoutRequestBodyOfCardComplete!.directSessionRequestBody,
-        );
-        Utils.printLog(directSessionApiResponse);
-        if (directSessionApiResponse.session == null) {
-          throw (directSessionApiResponse.detailedResponseMessage!);
+          // Create checkout request body with card details
+          checkoutRequestBody = CheckoutRequestBody(checkoutOptions, paymentCard);
+          checkoutRequestBody?.updateDirectSessionRequestBody(publicKey, apiPassword);
+          
+          Utils.printLog(checkoutRequestBody?.directSessionRequestBody);
+          
+          // Create a session with the payment gateway
+          final directSessionApiResponse = await createSession(
+            directSessionRequestBody: checkoutRequestBody!.directSessionRequestBody,
+          );
+          Utils.printLog(directSessionApiResponse);
+          
+          if (directSessionApiResponse.session == null) {
+            throw GeideaException(directSessionApiResponse.detailedResponseMessage ?? 'Session creation failed');
+          }
+          
+          // Update authentication request with session details
+          checkoutRequestBody?.updateInitiateAuthenticationRequestBody(
+            directSessionApiResponse.session,
+          );
+          
+          Utils.printLog(checkoutRequestBody?.initiateAuthenticationRequestBody);
+          
+          // Initiate authentication process
+          authenticationApiResponse = await initiateAuthentication(
+            initiateAuthenticationRequestBody: checkoutRequestBody!.initiateAuthenticationRequestBody,
+          );
+          Utils.printLog(authenticationApiResponse);
+        } catch (e) {
+          // Log the error but don't throw from the callback
+          Utils.printLog('Error in card completion: $e');
+          // Rethrow in UI context where it can be properly handled
+          rethrow;
         }
-        checkoutRequestBodyOfCardComplete!
-            .updateInitiateAuthenticationRequestBody(
-                directSessionApiResponse.session);
-
-        Utils.printLog(checkoutRequestBodyOfCardComplete!
-            .initiateAuthenticationRequestBody);
-        authenticationApiResponse = await initiateAuthentication(
-            initiateAuthenticationRequestBody:
-                checkoutRequestBodyOfCardComplete!
-                    .initiateAuthenticationRequestBody);
-        Utils.printLog(authenticationApiResponse);
       },
     );
 
-    var result = await Navigator.push(
+    // Show the credit card entry screen
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => creditCardScreen),
     );
 
+    // Process the result of the credit card screen
     if (result == "OK") {
+      // Update checkout options with save card preference
       checkoutOptions.cardOnFile = creditCardScreen.saveCard;
-      CheckoutRequestBody checkoutRequestBody =
-          CheckoutRequestBody(checkoutOptions, creditCardScreen.paymentCard);
-      try {
-        return _Geideapay(
-                publicKey, apiPassword, serverEnvironmentModel!.apiBaseUrl)
-            .checkout(
-          checkoutRequestBody:
-              checkoutRequestBodyOfCardComplete ?? checkoutRequestBody,
-          context: context,
-          authenticationApiResponse: authenticationApiResponse,
-        );
-      } catch (e) {
-        rethrow;
-      }
+      
+      // If we don't have a request body from card completion, create one
+      checkoutRequestBody ??= CheckoutRequestBody(checkoutOptions, creditCardScreen.paymentCard);
+      
+      // Complete the checkout process
+      return await _Geideapay(
+        publicKey, 
+        apiPassword, 
+        serverEnvironmentModel!.apiBaseUrl
+      ).checkout(
+        checkoutRequestBody: checkoutRequestBody!,
+        context: context,
+        authenticationApiResponse: authenticationApiResponse,
+      );
     } else {
+      // User cancelled the checkout process
       return OrderApiResponse(
-          responseCode: "-1", detailedResponseCode: "Payment cancelled");
+        responseCode: "-1", 
+        detailedResponseCode: "Payment cancelled",
+      );
     }
+  } catch (e) {
+    Utils.printLog('Checkout error: $e');
+    
+    // Return a proper error response instead of just rethrowing
+    return OrderApiResponse(
+      responseCode: "-1",
+      detailedResponseCode: "Error during checkout: ${e.toString()}",
+    );
   }
+}
 
   /// Create Session operation
   ///
