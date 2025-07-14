@@ -167,7 +167,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                               ),
                               onCreditCardModelChange: onCreditCardModelChange,
                             ),
-                            _customerEmailEN(),
+                            // _customerEmailEN(),
                             const SizedBox(
                               height: 10,
                             ),
