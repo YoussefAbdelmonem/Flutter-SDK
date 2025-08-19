@@ -81,14 +81,19 @@ class _CreditCardFormState extends State<CreditCardForm> {
   bool isCvvFocused = false;
   late Color themeColor;
   late InputDecoration cardNumberDecoration1;
-  bool? isRTL = false;
+  bool isRTL = false;
   late void Function(CreditCardModel) onCreditCardModelChange;
   late CreditCardModel creditCardModel;
 
-  late MaskedTextController _cardNumberController;
-  late MaskedTextController _expiryDateController;
-  late TextEditingController _cardHolderNameController;
-  late MaskedTextController _cvvCodeController;
+  final MaskedTextController _cardNumberController = MaskedTextController(
+    mask: '0000 0000 0000 0000',
+  );
+  final TextEditingController _expiryDateController =
+      MaskedTextController(mask: '00/00');
+  final TextEditingController _cardHolderNameController =
+      TextEditingController();
+  final TextEditingController _cvvCodeController =
+      MaskedTextController(mask: '0000');
 
   FocusNode cvvFocusNode = FocusNode();
   FocusNode expiryDateNode = FocusNode();
@@ -114,19 +119,6 @@ class _CreditCardFormState extends State<CreditCardForm> {
   void initState() {
     super.initState();
     isRTL = widget.rtl;
-    _cardNumberController = MaskedTextController(
-      mask: '0000 0000 0000 0000',
-      isRtl: isRTL ?? false,
-    );
-    _expiryDateController = MaskedTextController(
-      mask: '00/00',
-      isRtl: isRTL ?? false,
-    );
-    _cardHolderNameController = TextEditingController();
-    _cvvCodeController = MaskedTextController(
-      mask: '0000',
-      isRtl: isRTL ?? false,
-    );
 
     createCreditCardModel();
 

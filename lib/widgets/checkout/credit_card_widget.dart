@@ -636,7 +636,6 @@ class MaskedTextController extends TextEditingController {
     String? text,
     required this.mask,
     Map<String, RegExp>? translator,
-    this.isRtl = false,
   }) : super(text: text) {
     this.translator = translator ?? MaskedTextController.getDefaultTranslator();
 
@@ -648,7 +647,6 @@ class MaskedTextController extends TextEditingController {
         updateText(this.text, previousCursorPos);
         afterChange(previous, this.text);
       } else {
-        // Restore previous text but maintain cursor position if possible
         final int cursorPos = selection.baseOffset;
         super.text = _lastUpdatedText;
         _setCursorPosition(cursorPos);
@@ -659,21 +657,19 @@ class MaskedTextController extends TextEditingController {
   }
 
   String mask;
-  bool isRtl;
   late Map<String, RegExp> translator;
 
   Function afterChange = (String previous, String next) {};
-  Function beforeChange = (String previous, String next) {
-    return true;
-  };
+  Function beforeChange = (String previous, String next) => true;
 
   String _lastUpdatedText = '';
 
   void updateText(String text, [int? previousCursorPos]) {
     if (text.isNotEmpty) {
-      final String maskedText = _applyMask(mask, text);
+      final String normalized = _normalizeDigits(text);
+      final String maskedText = _applyMask(mask, normalized);
       final int cursorOffset =
-          _calculateCursorPosition(text, maskedText, previousCursorPos);
+          _calculateCursorPosition(normalized, maskedText, previousCursorPos);
 
       super.text = maskedText;
       _setCursorPosition(cursorOffset);
@@ -688,17 +684,8 @@ class MaskedTextController extends TextEditingController {
   int _calculateCursorPosition(
       String originalText, String maskedText, int? previousCursorPos) {
     if (previousCursorPos == null) {
-      return maskedText.length; // Default to end for initial setup
+      return maskedText.length;
     }
-
-    // For RTL languages, try to maintain relative cursor position
-    if (isRtl) {
-      // Calculate position from the right side
-      final int distanceFromEnd = _lastUpdatedText.length - previousCursorPos;
-      return (maskedText.length - distanceFromEnd).clamp(0, maskedText.length);
-    }
-
-    // For LTR languages, try to maintain absolute cursor position
     return previousCursorPos.clamp(0, maskedText.length);
   }
 
@@ -708,17 +695,13 @@ class MaskedTextController extends TextEditingController {
   }
 
   void moveCursorToEnd() {
-    final String text = _lastUpdatedText;
     selection = TextSelection.fromPosition(TextPosition(offset: text.length));
   }
 
   void updateMask(String mask, {bool moveCursorToEndBool = true}) {
     this.mask = mask;
     updateText(text);
-
-    if (moveCursorToEndBool) {
-      moveCursorToEnd();
-    }
+    if (moveCursorToEndBool) moveCursorToEnd();
   }
 
   @override
@@ -726,23 +709,39 @@ class MaskedTextController extends TextEditingController {
     if (super.text != newText) {
       final int currentCursorPos = selection.baseOffset;
       super.text = newText;
-
-      // Don't always move to end - preserve cursor position when possible
-      if (!isRtl) {
-        _setCursorPosition(currentCursorPos);
-      }
+      _setCursorPosition(currentCursorPos);
     }
   }
 
+  /// Translator for placeholders
   static Map<String, RegExp> getDefaultTranslator() {
     return <String, RegExp>{
-      'A': RegExp(
-          r'[A-Za-z\u0600-\u06FF\u0750-\u077F]'), // Include Arabic characters
-      '0': RegExp(r'[0-9\u0660-\u0669]'), // Include Arabic-Indic digits
-      '@': RegExp(
-          r'[A-Za-z0-9\u0600-\u06FF\u0750-\u077F\u0660-\u0669]'), // Include Arabic chars and digits
-      '*': RegExp(r'.*')
+      'A': RegExp(r'[A-Za-z]'), // Only English letters
+      '0': RegExp(r'[0-9]'), // Only English digits
+      '@': RegExp(r'[A-Za-z0-9]'), // Only English letters & digits
+      '*': RegExp(r'.*'), // Any character
     };
+  }
+
+  /// Normalize Arabic-Indic digits to Western 0-9
+  String _normalizeDigits(String input) {
+    const arabicIndic = [
+      '\u0660',
+      '\u0661',
+      '\u0662',
+      '\u0663',
+      '\u0664',
+      '\u0665',
+      '\u0666',
+      '\u0667',
+      '\u0668',
+      '\u0669'
+    ];
+    String output = input;
+    for (int i = 0; i < 10; i++) {
+      output = output.replaceAll(arabicIndic[i], i.toString());
+    }
+    return output;
   }
 
   String _applyMask(String? mask, String value) {
@@ -752,14 +751,12 @@ class MaskedTextController extends TextEditingController {
     int maskCharIndex = 0;
     int valueCharIndex = 0;
 
-    // Remove any existing mask characters from input for clean processing
     String cleanValue = _removeMaskCharacters(value, mask);
 
     while (maskCharIndex < mask.length && valueCharIndex < cleanValue.length) {
       final String maskChar = mask[maskCharIndex];
       final String valueChar = cleanValue[valueCharIndex];
 
-      // If mask character matches input character exactly, use it
       if (maskChar == valueChar) {
         result += maskChar;
         valueCharIndex++;
@@ -767,24 +764,20 @@ class MaskedTextController extends TextEditingController {
         continue;
       }
 
-      // Check if this mask position accepts the input character
       if (translator.containsKey(maskChar)) {
         if (translator[maskChar]!.hasMatch(valueChar)) {
           result += valueChar;
           valueCharIndex++;
         } else {
-          // Invalid character, skip it
           valueCharIndex++;
           continue;
         }
         maskCharIndex++;
       } else {
-        // Fixed character in mask
         result += maskChar;
         maskCharIndex++;
       }
     }
-
     return result;
   }
 
@@ -792,7 +785,6 @@ class MaskedTextController extends TextEditingController {
     String result = '';
     Set<String> maskChars = <String>{};
 
-    // Collect all non-placeholder characters from mask
     for (int i = 0; i < mask.length; i++) {
       String char = mask[i];
       if (!translator.containsKey(char)) {
@@ -800,7 +792,6 @@ class MaskedTextController extends TextEditingController {
       }
     }
 
-    // Remove mask characters from value
     for (int i = 0; i < value.length; i++) {
       String char = value[i];
       if (!maskChars.contains(char)) {
