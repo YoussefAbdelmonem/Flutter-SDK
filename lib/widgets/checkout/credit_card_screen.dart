@@ -95,6 +95,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                                             widget.checkoutOptions.textColor))),
                             CreditCardForm(
                               formKey: formKey,
+                              rtl: false,
                               obscureCvv: true,
                               obscureNumber: false,
                               cardNumber: widget.paymentCard.number,
@@ -167,7 +168,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                               ),
                               onCreditCardModelChange: onCreditCardModelChange,
                             ),
-                            // _customerEmailEN(),
+                            _customerEmailEN(),
                             const SizedBox(
                               height: 10,
                             ),
@@ -226,15 +227,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                                     child: Container(
                                       margin: const EdgeInsets.all(12),
                                       child: Text(
-                                        'Pay ' +
-                                            widget.checkoutOptions.amount
-                                                .toString() +
-                                            ' ' +
-                                            (widget.checkoutOptions.currency !=
-                                                    null
-                                                ? widget
-                                                    .checkoutOptions.currency!
-                                                : ''),
+                                        'Pay ${widget.checkoutOptions.amount} ${widget.checkoutOptions.currency != null ? widget.checkoutOptions.currency! : ''}',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 14,
@@ -830,14 +823,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                                       //   ),
                                       // ),
                                       child: Text(
-                                        (widget.checkoutOptions.currency != null
-                                                ? widget
-                                                    .checkoutOptions.currency!
-                                                : '') +
-                                            'ادفع ' +
-                                            widget.checkoutOptions.amount
-                                                .toString() +
-                                            ' ',
+                                        '${widget.checkoutOptions.currency != null ? widget.checkoutOptions.currency! : ''}ادفع ${widget.checkoutOptions.amount} ',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 14,
@@ -958,6 +944,7 @@ class CreditCardScreenState extends State<CreditCardScreen> {
 
   Widget _shippingAddressCheckBoxAR() {
     return CheckboxListTile(
+    
       title: Text(
         "عنوان الشحن هو نفسه عنوان إرسال الفواتير",
         style: Theme.of(context).textTheme.labelLarge,

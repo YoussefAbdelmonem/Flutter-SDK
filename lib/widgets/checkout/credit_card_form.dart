@@ -121,7 +121,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
     createCreditCardModel();
 
     debugPrint(widget.cardNumberDecoration.hintStyle.toString());
-    cardNumberDecoration1 = new InputDecoration(
+    cardNumberDecoration1 = InputDecoration(
       labelText: widget.cardNumberDecoration.labelText,
       hintText: widget.cardNumberDecoration.hintText,
       hintStyle: widget.cardNumberDecoration.hintStyle,
