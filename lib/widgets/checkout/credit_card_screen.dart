@@ -93,80 +93,84 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                                         fontWeight: FontWeight.bold,
                                         color:
                                             widget.checkoutOptions.textColor))),
-                            CreditCardForm(
-                              formKey: formKey,
-                              rtl: false,
-                              obscureCvv: true,
-                              obscureNumber: false,
-                              cardNumber: widget.paymentCard.number,
-                              cvvCode: widget.paymentCard.cvc,
-                              isHolderNameVisible: true,
-                              isCardNumberVisible: true,
-                              isExpiryDateVisible: true,
-                              cardHolderName: widget.paymentCard.name,
-                              expiryYear: widget.paymentCard.expiryYear,
-                              expiryMonth: widget.paymentCard.expiryMonth,
-                              themeColor: Colors.blue,
-                              textColor: Colors.white,
-                              onChange: cardNumberChange,
-                              onCardEditComplete: () => widget
-                                  .onCardEditComplete!(widget.paymentCard),
-                              cardNumberDecoration: InputDecoration(
-                                labelText: 'Number',
-                                hintText: 'XXXX XXXX XXXX XXXX',
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                suffixIcon: (cardType != null &&
-                                        CreditCardTypeIconAsset[cardType] !=
-                                            null)
-                                    ? Container(
-                                        margin: const EdgeInsets.all(12),
-                                        child: Image.asset(
-                                          CreditCardTypeIconAsset[cardType]!,
-                                          height: 32,
-                                          width: 32,
-                                          package: 'geideapay',
-                                        ))
-                                    : Icon(
-                                        Icons.call_to_action_rounded,
-                                        color: widget
-                                            .checkoutOptions.backgroundColor,
-                                      ),
+                            Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: CreditCardForm(
+                                formKey: formKey,
+                                rtl: false,
+                                obscureCvv: true,
+                                obscureNumber: false,
+                                cardNumber: widget.paymentCard.number,
+                                cvvCode: widget.paymentCard.cvc,
+                                isHolderNameVisible: true,
+                                isCardNumberVisible: true,
+                                isExpiryDateVisible: true,
+                                cardHolderName: widget.paymentCard.name,
+                                expiryYear: widget.paymentCard.expiryYear,
+                                expiryMonth: widget.paymentCard.expiryMonth,
+                                themeColor: Colors.blue,
+                                textColor: Colors.white,
+                                onChange: cardNumberChange,
+                                onCardEditComplete: () => widget
+                                    .onCardEditComplete!(widget.paymentCard),
+                                cardNumberDecoration: InputDecoration(
+                                  labelText: 'Number',
+                                  hintText: 'XXXX XXXX XXXX XXXX',
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  suffixIcon: (cardType != null &&
+                                          CreditCardTypeIconAsset[cardType] !=
+                                              null)
+                                      ? Container(
+                                          margin: const EdgeInsets.all(12),
+                                          child: Image.asset(
+                                            CreditCardTypeIconAsset[cardType]!,
+                                            height: 32,
+                                            width: 32,
+                                            package: 'geideapay',
+                                          ))
+                                      : Icon(
+                                          Icons.call_to_action_rounded,
+                                          color: widget
+                                              .checkoutOptions.backgroundColor,
+                                        ),
+                                ),
+                                expiryDateDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'Expired Date',
+                                  hintText: 'XX/XX',
+                                ),
+                                cvvCodeDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'CVV',
+                                  hintText: 'XXX',
+                                ),
+                                cardHolderDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'Card Holder',
+                                ),
+                                onCreditCardModelChange:
+                                    onCreditCardModelChange,
                               ),
-                              expiryDateDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'Expired Date',
-                                hintText: 'XX/XX',
-                              ),
-                              cvvCodeDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'CVV',
-                                hintText: 'XXX',
-                              ),
-                              cardHolderDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'Card Holder',
-                              ),
-                              onCreditCardModelChange: onCreditCardModelChange,
                             ),
                             _customerEmailEN(),
                             const SizedBox(
@@ -682,78 +686,82 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                       child: SingleChildScrollView(
                         child: Column(
                           children: <Widget>[
-                            CreditCardForm(
-                              rtl: true,
-                              formKey: formKey,
-                              obscureCvv: true,
-                              obscureNumber: false,
-                              cardNumber: widget.paymentCard.number,
-                              cvvCode: widget.paymentCard.cvc,
-                              isHolderNameVisible: true,
-                              isCardNumberVisible: true,
-                              isExpiryDateVisible: true,
-                              cardHolderName: widget.paymentCard.name,
-                              expiryYear: widget.paymentCard.expiryYear,
-                              expiryMonth: widget.paymentCard.expiryMonth,
-                              themeColor: Colors.blue,
-                              textColor: Colors.white,
-                              onChange: cardNumberChange,
-                              cardNumberDecoration: InputDecoration(
-                                labelText: 'رقم الكارت',
-                                hintText: 'XXXX XXXX XXXX XXXX',
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                suffixIcon: (cardType != null &&
-                                        CreditCardTypeIconAsset[cardType] !=
-                                            null)
-                                    ? Container(
-                                        margin: const EdgeInsets.all(12),
-                                        child: Image.asset(
-                                          CreditCardTypeIconAsset[cardType]!,
-                                          height: 32,
-                                          width: 32,
-                                          package: 'geideapay',
-                                        ))
-                                    : Icon(
-                                        Icons.call_to_action_rounded,
-                                        color: widget
-                                            .checkoutOptions.backgroundColor,
-                                      ),
+                            Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: CreditCardForm(
+                                rtl: true,
+                                formKey: formKey,
+                                obscureCvv: true,
+                                obscureNumber: false,
+                                cardNumber: widget.paymentCard.number,
+                                cvvCode: widget.paymentCard.cvc,
+                                isHolderNameVisible: true,
+                                isCardNumberVisible: true,
+                                isExpiryDateVisible: true,
+                                cardHolderName: widget.paymentCard.name,
+                                expiryYear: widget.paymentCard.expiryYear,
+                                expiryMonth: widget.paymentCard.expiryMonth,
+                                themeColor: Colors.blue,
+                                textColor: Colors.white,
+                                onChange: cardNumberChange,
+                                cardNumberDecoration: InputDecoration(
+                                  labelText: 'رقم الكارت',
+                                  hintText: 'XXXX XXXX XXXX XXXX',
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  suffixIcon: (cardType != null &&
+                                          CreditCardTypeIconAsset[cardType] !=
+                                              null)
+                                      ? Container(
+                                          margin: const EdgeInsets.all(12),
+                                          child: Image.asset(
+                                            CreditCardTypeIconAsset[cardType]!,
+                                            height: 32,
+                                            width: 32,
+                                            package: 'geideapay',
+                                          ))
+                                      : Icon(
+                                          Icons.call_to_action_rounded,
+                                          color: widget
+                                              .checkoutOptions.backgroundColor,
+                                        ),
+                                ),
+                                expiryDateDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'تاريخ الانتهاء',
+                                  hintText: 'XX/XX',
+                                ),
+                                cvvCodeDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'الرقم المرجعى',
+                                  hintText: 'XXX',
+                                ),
+                                cardHolderDecoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  labelStyle: TextStyle(
+                                      color: widget.checkoutOptions.textColor),
+                                  focusedBorder: border,
+                                  enabledBorder: border,
+                                  labelText: 'اسم صاحب الكارت',
+                                ),
+                                onCreditCardModelChange:
+                                    onCreditCardModelChange,
                               ),
-                              expiryDateDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'تاريخ الانتهاء',
-                                hintText: 'XX/XX',
-                              ),
-                              cvvCodeDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'الرقم المرجعى',
-                                hintText: 'XXX',
-                              ),
-                              cardHolderDecoration: InputDecoration(
-                                hintStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                labelStyle: TextStyle(
-                                    color: widget.checkoutOptions.textColor),
-                                focusedBorder: border,
-                                enabledBorder: border,
-                                labelText: 'اسم صاحب الكارت',
-                              ),
-                              onCreditCardModelChange: onCreditCardModelChange,
                             ),
                             _customerEmailAR(),
                             const SizedBox(
@@ -944,7 +952,6 @@ class CreditCardScreenState extends State<CreditCardScreen> {
 
   Widget _shippingAddressCheckBoxAR() {
     return CheckboxListTile(
-    
       title: Text(
         "عنوان الشحن هو نفسه عنوان إرسال الفواتير",
         style: Theme.of(context).textTheme.labelLarge,
