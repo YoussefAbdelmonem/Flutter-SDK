@@ -630,55 +630,79 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
               element.cardType == currentCardType)
           .toList();
 }
-
 class MaskedTextController extends TextEditingController {
   MaskedTextController({
     String? text,
     required this.mask,
     Map<String, RegExp>? translator,
+    this.isRtl = false,
   }) : super(text: text) {
     this.translator = translator ?? MaskedTextController.getDefaultTranslator();
+    _isUpdating = false;
 
     addListener(() {
+      // Prevent infinite loop by checking if we're already updating
+      if (_isUpdating) return;
+      
       final String previous = _lastUpdatedText;
       final int previousCursorPos = selection.baseOffset;
 
       if (beforeChange(previous, this.text)) {
-        updateText(this.text, previousCursorPos);
+        _updateText(this.text, previousCursorPos);
         afterChange(previous, this.text);
       } else {
-        final int cursorPos = selection.baseOffset;
+        // Restore previous text without triggering listener
+        _isUpdating = true;
         super.text = _lastUpdatedText;
-        _setCursorPosition(cursorPos);
+        _setCursorPosition(previousCursorPos);
+        _isUpdating = false;
       }
     });
 
-    updateText(this.text);
+    _updateText(this.text);
   }
 
   String mask;
+  bool isRtl;
   late Map<String, RegExp> translator;
+  bool _isUpdating = false; // Flag to prevent infinite loops
 
   Function afterChange = (String previous, String next) {};
   Function beforeChange = (String previous, String next) => true;
 
   String _lastUpdatedText = '';
 
-  void updateText(String text, [int? previousCursorPos]) {
-    if (text.isNotEmpty) {
-      final String normalized = _normalizeDigits(text);
-      final String maskedText = _applyMask(mask, normalized);
-      final int cursorOffset =
-          _calculateCursorPosition(normalized, maskedText, previousCursorPos);
+  void _updateText(String text, [int? previousCursorPos]) {
+    _isUpdating = true;
+    
+    try {
+      if (text.isNotEmpty) {
+        final String normalizedText = _normalizeDigits(text);
+        final String maskedText = _applyMask(mask, normalizedText);
+        final int cursorOffset = _calculateCursorPosition(
+          normalizedText, 
+          maskedText, 
+          previousCursorPos
+        );
 
-      super.text = maskedText;
-      _setCursorPosition(cursorOffset);
-    } else {
-      super.text = '';
-      _setCursorPosition(0);
+        super.text = maskedText;
+        _setCursorPosition(cursorOffset);
+      } else {
+        super.text = '';
+        _setCursorPosition(0);
+      }
+
+      _lastUpdatedText = super.text;
+    } finally {
+      _isUpdating = false;
     }
+  }
 
-    _lastUpdatedText = super.text;
+  // Public method that external code can call
+  void updateText(String text, [int? previousCursorPos]) {
+    if (!_isUpdating) {
+      _updateText(text, previousCursorPos);
+    }
   }
 
   int _calculateCursorPosition(
@@ -686,56 +710,71 @@ class MaskedTextController extends TextEditingController {
     if (previousCursorPos == null) {
       return maskedText.length;
     }
+
+    if (isRtl) {
+      final int distanceFromEnd = _lastUpdatedText.length - previousCursorPos;
+      return (maskedText.length - distanceFromEnd).clamp(0, maskedText.length);
+    }
+
     return previousCursorPos.clamp(0, maskedText.length);
   }
 
   void _setCursorPosition(int position) {
-    final int safePosition = position.clamp(0, text.length);
-    selection = TextSelection.fromPosition(TextPosition(offset: safePosition));
+    if (_isUpdating) {
+      final int safePosition = position.clamp(0, text.length);
+      super.selection = TextSelection.fromPosition(
+        TextPosition(offset: safePosition)
+      );
+    }
+  }
+
+  void updateMask(String mask, {bool moveCursorToEndbool = true}) {
+    this.mask = mask;
+    _updateText(text);
+    if (moveCursorToEndbool) {
+      moveCursorToEnd();
+    }
   }
 
   void moveCursorToEnd() {
-    selection = TextSelection.fromPosition(TextPosition(offset: text.length));
-  }
-
-  void updateMask(String mask, {bool moveCursorToEndBool = true}) {
-    this.mask = mask;
-    updateText(text);
-    if (moveCursorToEndBool) moveCursorToEnd();
+    if (!_isUpdating) {
+      _isUpdating = true;
+      final String currentText = _lastUpdatedText;
+      super.selection = TextSelection.fromPosition(
+        TextPosition(offset: currentText.length)
+      );
+      _isUpdating = false;
+    }
   }
 
   @override
   set text(String newText) {
-    if (super.text != newText) {
-      final int currentCursorPos = selection.baseOffset;
-      super.text = newText;
-      _setCursorPosition(currentCursorPos);
+    if (!_isUpdating && super.text != newText) {
+      _updateText(newText);
     }
   }
 
-  /// Translator for placeholders
+  @override
+  set selection(TextSelection newSelection) {
+    if (!_isUpdating) {
+      super.selection = newSelection;
+    }
+  }
+
   static Map<String, RegExp> getDefaultTranslator() {
     return <String, RegExp>{
-      'A': RegExp(r'[A-Za-z]'), // Only English letters
-      '0': RegExp(r'[0-9]'), // Only English digits
-      '@': RegExp(r'[A-Za-z0-9]'), // Only English letters & digits
-      '*': RegExp(r'.*'), // Any character
+      'A': RegExp(r'[A-Za-z\u0600-\u06FF\u0750-\u077F]'), // Include Arabic characters
+      '0': RegExp(r'[0-9\u0660-\u0669]'), // Include Arabic-Indic digits
+      '@': RegExp(r'[A-Za-z0-9\u0600-\u06FF\u0750-\u077F\u0660-\u0669]'), // Include Arabic chars and digits
+      '*': RegExp(r'.*')
     };
   }
 
   /// Normalize Arabic-Indic digits to Western 0-9
   String _normalizeDigits(String input) {
     const arabicIndic = [
-      '\u0660',
-      '\u0661',
-      '\u0662',
-      '\u0663',
-      '\u0664',
-      '\u0665',
-      '\u0666',
-      '\u0667',
-      '\u0668',
-      '\u0669'
+      '\u0660', '\u0661', '\u0662', '\u0663', '\u0664',
+      '\u0665', '\u0666', '\u0667', '\u0668', '\u0669'
     ];
     String output = input;
     for (int i = 0; i < 10; i++) {
@@ -778,29 +817,29 @@ class MaskedTextController extends TextEditingController {
         maskCharIndex++;
       }
     }
+
     return result;
   }
 
   String _removeMaskCharacters(String value, String mask) {
     String result = '';
     Set<String> maskChars = <String>{};
-
+    
     for (int i = 0; i < mask.length; i++) {
       String char = mask[i];
       if (!translator.containsKey(char)) {
         maskChars.add(char);
       }
     }
-
+    
     for (int i = 0; i < value.length; i++) {
       String char = value[i];
       if (!maskChars.contains(char)) {
         result += char;
       }
     }
-
+    
     return result;
   }
 }
-
 enum CardType { otherBrand, mastercard, visa, americanExpress, discover, mada }

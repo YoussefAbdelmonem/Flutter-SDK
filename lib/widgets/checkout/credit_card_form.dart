@@ -84,16 +84,10 @@ class _CreditCardFormState extends State<CreditCardForm> {
   bool isRTL = false;
   late void Function(CreditCardModel) onCreditCardModelChange;
   late CreditCardModel creditCardModel;
-
-  final MaskedTextController _cardNumberController = MaskedTextController(
-    mask: '0000 0000 0000 0000',
-  );
-  final TextEditingController _expiryDateController =
-      MaskedTextController(mask: '00/00');
-  final TextEditingController _cardHolderNameController =
-      TextEditingController();
-  final TextEditingController _cvvCodeController =
-      MaskedTextController(mask: '0000');
+  late MaskedTextController _cardNumberController;
+  late MaskedTextController _expiryDateController;
+  late TextEditingController _cardHolderNameController;
+  late MaskedTextController _cvvCodeController;
 
   FocusNode cvvFocusNode = FocusNode();
   FocusNode expiryDateNode = FocusNode();
@@ -119,6 +113,19 @@ class _CreditCardFormState extends State<CreditCardForm> {
   void initState() {
     super.initState();
     isRTL = widget.rtl;
+    _cardNumberController = MaskedTextController(
+      mask: '0000 0000 0000 0000',
+      isRtl: isRTL,
+    );
+    _expiryDateController = MaskedTextController(
+      mask: '00/00',
+      isRtl: isRTL,
+    );
+    _cardHolderNameController = TextEditingController();
+    _cvvCodeController = MaskedTextController(
+      mask: '0000',
+      isRtl: isRTL,
+    );
 
     createCreditCardModel();
 
@@ -172,6 +179,12 @@ class _CreditCardFormState extends State<CreditCardForm> {
 
   @override
   void dispose() {
+    // Dispose controllers
+    _cardNumberController.dispose();
+    _expiryDateController.dispose();
+    _cardHolderNameController.dispose();
+    _cvvCodeController.dispose();
+    
     cardHolderNode.dispose();
     cvvFocusNode.dispose();
     expiryDateNode.dispose();
