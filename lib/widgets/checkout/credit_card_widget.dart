@@ -17,11 +17,10 @@ const Map<CardType, String> CardTypeIconAsset = <CardType, String>{
 };
 
 class CreditCardWidget extends StatefulWidget {
-
   CreditCardWidget(
       {Key? key,
       required this.cardNumber,
-        required this.expiryYear,
+      required this.expiryYear,
       required this.expiryMonth,
       required this.cardHolderName,
       required this.cvvCode,
@@ -43,14 +42,13 @@ class CreditCardWidget extends StatefulWidget {
       this.isSwipeGestureEnabled = true,
       this.customCardTypeIcons = const <CustomCardTypeIcon>[],
       required this.onCreditCardWidgetChange})
-      : super(key: key)
-  {
+      : super(key: key) {
     expiryDate = expiryMonth.toString() + "/" + expiryYear.toString();
   }
 
   final String? cardNumber;
   String? expiryDate;
-  int?  expiryMonth, expiryYear;
+  int? expiryMonth, expiryYear;
   final String? cardHolderName;
   final String? cvvCode;
   final TextStyle? textStyle;
@@ -537,8 +535,9 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
   }
 
   Widget getCardTypeImage(CardType? cardType) {
-    final List<CustomCardTypeIcon> customCardTypeIcon = getCustomCardTypeIcon(cardType!);
-    if(customCardTypeIcon.isNotEmpty){
+    final List<CustomCardTypeIcon> customCardTypeIcon =
+        getCustomCardTypeIcon(cardType!);
+    if (customCardTypeIcon.isNotEmpty) {
       return customCardTypeIcon.first.cardImage;
     } else {
       return Image.asset(
@@ -550,12 +549,13 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
     }
   }
 
-    // This method returns the icon for the visa card type if found
-    // else will return the empty container
+  // This method returns the icon for the visa card type if found
+  // else will return the empty container
   Widget getCardTypeIcon(String cardNumber) {
     Widget icon;
     final CardType ccType = detectCCType(cardNumber);
-    final List<CustomCardTypeIcon> customCardTypeIcon = getCustomCardTypeIcon(ccType);
+    final List<CustomCardTypeIcon> customCardTypeIcon =
+        getCustomCardTypeIcon(ccType);
     if (customCardTypeIcon.isNotEmpty) {
       icon = customCardTypeIcon.first.cardImage;
       isAmex = ccType == CardType.americanExpress;
@@ -632,18 +632,26 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 }
 
 class MaskedTextController extends TextEditingController {
-  MaskedTextController(
-      {String? text, required this.mask, Map<String, RegExp>? translator})
-      : super(text: text) {
+  MaskedTextController({
+    String? text,
+    required this.mask,
+    Map<String, RegExp>? translator,
+    this.isRtl = false,
+  }) : super(text: text) {
     this.translator = translator ?? MaskedTextController.getDefaultTranslator();
 
     addListener(() {
       final String previous = _lastUpdatedText;
+      final int previousCursorPos = selection.baseOffset;
+
       if (beforeChange(previous, this.text)) {
-        updateText(this.text);
+        updateText(this.text, previousCursorPos);
         afterChange(previous, this.text);
       } else {
-        updateText(_lastUpdatedText);
+        // Restore previous text but maintain cursor position if possible
+        final int cursorPos = selection.baseOffset;
+        super.text = _lastUpdatedText;
+        _setCursorPosition(cursorPos);
       }
     });
 
@@ -651,7 +659,7 @@ class MaskedTextController extends TextEditingController {
   }
 
   String mask;
-
+  bool isRtl;
   late Map<String, RegExp> translator;
 
   Function afterChange = (String previous, String next) {};
@@ -661,23 +669,42 @@ class MaskedTextController extends TextEditingController {
 
   String _lastUpdatedText = '';
 
-  void updateText(String text) {
+  void updateText(String text, [int? previousCursorPos]) {
     if (text.isNotEmpty) {
-      this.text = _applyMask(mask, text);
+      final String maskedText = _applyMask(mask, text);
+      final int cursorOffset =
+          _calculateCursorPosition(text, maskedText, previousCursorPos);
+
+      super.text = maskedText;
+      _setCursorPosition(cursorOffset);
     } else {
-      this.text = '';
+      super.text = '';
+      _setCursorPosition(0);
     }
 
-    _lastUpdatedText = this.text;
+    _lastUpdatedText = super.text;
   }
 
-  void updateMask(String mask, {bool moveCursorToEnd = true}) {
-    this.mask = mask;
-    updateText(text);
-
-    if (moveCursorToEnd) {
-      this.moveCursorToEnd();
+  int _calculateCursorPosition(
+      String originalText, String maskedText, int? previousCursorPos) {
+    if (previousCursorPos == null) {
+      return maskedText.length; // Default to end for initial setup
     }
+
+    // For RTL languages, try to maintain relative cursor position
+    if (isRtl) {
+      // Calculate position from the right side
+      final int distanceFromEnd = _lastUpdatedText.length - previousCursorPos;
+      return (maskedText.length - distanceFromEnd).clamp(0, maskedText.length);
+    }
+
+    // For LTR languages, try to maintain absolute cursor position
+    return previousCursorPos.clamp(0, maskedText.length);
+  }
+
+  void _setCursorPosition(int position) {
+    final int safePosition = position.clamp(0, text.length);
+    selection = TextSelection.fromPosition(TextPosition(offset: safePosition));
   }
 
   void moveCursorToEnd() {
@@ -685,77 +712,104 @@ class MaskedTextController extends TextEditingController {
     selection = TextSelection.fromPosition(TextPosition(offset: text.length));
   }
 
+  void updateMask(String mask, {bool moveCursorToEndBool = true}) {
+    this.mask = mask;
+    updateText(text);
+
+    if (moveCursorToEndBool) {
+      moveCursorToEnd();
+    }
+  }
+
   @override
   set text(String newText) {
     if (super.text != newText) {
+      final int currentCursorPos = selection.baseOffset;
       super.text = newText;
-      moveCursorToEnd();
+
+      // Don't always move to end - preserve cursor position when possible
+      if (!isRtl) {
+        _setCursorPosition(currentCursorPos);
+      }
     }
   }
 
   static Map<String, RegExp> getDefaultTranslator() {
     return <String, RegExp>{
-      'A': RegExp(r'[A-Za-z]'),
-      '0': RegExp(r'[0-9]'),
-      '@': RegExp(r'[A-Za-z0-9]'),
+      'A': RegExp(
+          r'[A-Za-z\u0600-\u06FF\u0750-\u077F]'), // Include Arabic characters
+      '0': RegExp(r'[0-9\u0660-\u0669]'), // Include Arabic-Indic digits
+      '@': RegExp(
+          r'[A-Za-z0-9\u0600-\u06FF\u0750-\u077F\u0660-\u0669]'), // Include Arabic chars and digits
       '*': RegExp(r'.*')
     };
   }
 
   String _applyMask(String? mask, String value) {
-    String result = '';
+    if (mask == null || mask.isEmpty) return value;
 
+    String result = '';
     int maskCharIndex = 0;
     int valueCharIndex = 0;
 
-    while (true) {
-      // if mask is ended, break.
-      if (maskCharIndex == mask!.length) {
-        break;
-      }
+    // Remove any existing mask characters from input for clean processing
+    String cleanValue = _removeMaskCharacters(value, mask);
 
-      // if value is ended, break.
-      if (valueCharIndex == value.length) {
-        break;
-      }
-
+    while (maskCharIndex < mask.length && valueCharIndex < cleanValue.length) {
       final String maskChar = mask[maskCharIndex];
-      final String valueChar = value[valueCharIndex];
+      final String valueChar = cleanValue[valueCharIndex];
 
-      // value equals mask, just set
+      // If mask character matches input character exactly, use it
       if (maskChar == valueChar) {
         result += maskChar;
-        valueCharIndex += 1;
-        maskCharIndex += 1;
+        valueCharIndex++;
+        maskCharIndex++;
         continue;
       }
 
-      // apply translator if match
+      // Check if this mask position accepts the input character
       if (translator.containsKey(maskChar)) {
         if (translator[maskChar]!.hasMatch(valueChar)) {
           result += valueChar;
-          maskCharIndex += 1;
+          valueCharIndex++;
+        } else {
+          // Invalid character, skip it
+          valueCharIndex++;
+          continue;
         }
-
-        valueCharIndex += 1;
-        continue;
+        maskCharIndex++;
+      } else {
+        // Fixed character in mask
+        result += maskChar;
+        maskCharIndex++;
       }
+    }
 
-      // not masked value, fixed char on mask
-      result += maskChar;
-      maskCharIndex += 1;
-      continue;
+    return result;
+  }
+
+  String _removeMaskCharacters(String value, String mask) {
+    String result = '';
+    Set<String> maskChars = <String>{};
+
+    // Collect all non-placeholder characters from mask
+    for (int i = 0; i < mask.length; i++) {
+      String char = mask[i];
+      if (!translator.containsKey(char)) {
+        maskChars.add(char);
+      }
+    }
+
+    // Remove mask characters from value
+    for (int i = 0; i < value.length; i++) {
+      String char = value[i];
+      if (!maskChars.contains(char)) {
+        result += char;
+      }
     }
 
     return result;
   }
 }
 
-enum CardType {
-  otherBrand,
-  mastercard,
-  visa,
-  americanExpress,
-  discover,
-  mada
-}
+enum CardType { otherBrand, mastercard, visa, americanExpress, discover, mada }
