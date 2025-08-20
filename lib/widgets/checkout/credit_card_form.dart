@@ -280,6 +280,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
                   textDirection: TextDirection.ltr, // force LTR for numeric
                   obscureText: widget.obscureNumber,
                   cursorColor: widget.cursorColor ?? themeColor,
+                  
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
                   autofillHints: const <String>[AutofillHints.creditCardNumber],

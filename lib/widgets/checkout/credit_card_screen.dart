@@ -59,7 +59,8 @@ class CreditCardScreenState extends State<CreditCardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return buildCreditCardScreen(context, isArabic: widget.checkoutOptions.lang == "ar");
+    return buildCreditCardScreen(context,
+        isArabic: widget.checkoutOptions.lang == "ar");
     // if (widget.checkoutOptions.lang == "en") {
     //   return buildCreditCardScreen_EN(context);
     // } else {
@@ -67,209 +68,225 @@ class CreditCardScreenState extends State<CreditCardScreen> {
     // }
   }
 
-Widget buildCreditCardScreen(BuildContext context, {required bool isArabic}) {
-  final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.0),
-    borderSide: const BorderSide(color: Colors.white),
-  );
+  Widget buildCreditCardScreen(BuildContext context, {required bool isArabic}) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.white),
+    );
 
-  return Scaffold(
-    resizeToAvoidBottomInset: false,
-    body: Stack(
-      children: [
-        Container(
-          color: widget.checkoutOptions.backgroundColor,
-          child: SafeArea(
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 30),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: isArabic
-                          ? CrossAxisAlignment.center
-                          : CrossAxisAlignment.start,
-                      children: <Widget>[
-                        if (!isArabic)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16, top: 10),
-                            child: Text("Payment",
-                                style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: widget.checkoutOptions.textColor)),
-                          ),
-                        Directionality(
-                          textDirection:
-                              isArabic ? TextDirection.rtl : TextDirection.ltr,
-                          child: CreditCardForm(
-                            rtl: isArabic,
-                            formKey: formKey,
-                            obscureCvv: true,
-                            obscureNumber: false,
-                            cardNumber: widget.paymentCard.number,
-                            cvvCode: widget.paymentCard.cvc,
-                            isHolderNameVisible: true,
-                            isCardNumberVisible: true,
-                            isExpiryDateVisible: true,
-                            cardHolderName: widget.paymentCard.name,
-                            expiryYear: widget.paymentCard.expiryYear,
-                            expiryMonth: widget.paymentCard.expiryMonth,
-                            themeColor: Colors.blue,
-                            textColor: Colors.white,
-                            onChange: cardNumberChange,
-                            onCreditCardModelChange: onCreditCardModelChange,
-                            onCardEditComplete: () {
-                              widget.onCardEditComplete
-                                  ?.call(widget.paymentCard);
-                            },
-                            cardNumberDecoration: InputDecoration(
-                              labelText:
-                                  isArabic ? 'رقم الكارت' : 'Number',
-                              hintText: 'XXXX XXXX XXXX XXXX',
-                              labelStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              hintStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              focusedBorder: border,
-                              enabledBorder: border,
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
+          Container(
+            color: widget.checkoutOptions.backgroundColor,
+            child: SafeArea(
+              child: Column(
+                children: <Widget>[
+                  const SizedBox(height: 30),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: isArabic
+                            ? CrossAxisAlignment.center
+                            : CrossAxisAlignment.start,
+                        children: <Widget>[
+                          if (!isArabic)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16, top: 10),
+                              child: Text("Payment",
+                                  style: TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: widget.checkoutOptions.textColor)),
                             ),
-                            expiryDateDecoration: InputDecoration(
-                              labelText:
-                                  isArabic ? 'تاريخ الانتهاء' : 'Expiry Date',
-                              hintText: 'XX/XX',
-                              labelStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              hintStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              focusedBorder: border,
-                              enabledBorder: border,
-                            ),
-                            cvvCodeDecoration: InputDecoration(
-                              labelText:
-                                  isArabic ? 'الرقم المرجعى' : 'CVV',
-                              hintText: 'XXX',
-                              labelStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              hintStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              focusedBorder: border,
-                              enabledBorder: border,
-                            ),
-                            cardHolderDecoration: InputDecoration(
-                              labelText: isArabic
-                                  ? 'اسم صاحب الكارت'
-                                  : 'Card Holder',
-                              labelStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              hintStyle: TextStyle(
-                                  color: widget.checkoutOptions.textColor),
-                              focusedBorder: border,
-                              enabledBorder: border,
-                            ),
-                          ),
-                        ),
-                        isArabic ? _customerEmailAR() : _customerEmailEN(),
-                        // ... reuse your same address + save card blocks
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0)),
-                                backgroundColor:
-                                    widget.checkoutOptions.payButtonColor,
+                          Directionality(
+                            textDirection: isArabic
+                                ? TextDirection.rtl
+                                : TextDirection.ltr,
+                            child: CreditCardForm(
+                              rtl: isArabic,
+                              formKey: formKey,
+                              obscureCvv: true,
+                              obscureNumber: false,
+                              cardNumber: widget.paymentCard.number,
+                              cvvCode: widget.paymentCard.cvc,
+                              isHolderNameVisible: true,
+                              isCardNumberVisible: true,
+                              isExpiryDateVisible: true,
+                              cardHolderName: widget.paymentCard.name,
+                              expiryYear: widget.paymentCard.expiryYear,
+                              expiryMonth: widget.paymentCard.expiryMonth,
+                              themeColor: Colors.blue,
+                              textColor: Colors.white,
+                              onChange: cardNumberChange,
+                              onCreditCardModelChange: onCreditCardModelChange,
+                              onCardEditComplete: () {
+                                widget.onCardEditComplete
+                                    ?.call(widget.paymentCard);
+                              },
+                              cardNumberDecoration: InputDecoration(
+                                labelText: isArabic ? 'رقم الكارت' : 'Number',
+                                hintText: 'XXXX XXXX XXXX XXXX',
+                                labelStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                hintStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                focusedBorder: border,
+                                enabledBorder: border,
+                                suffixIcon: (cardType != null &&
+                                        CreditCardTypeIconAsset[cardType] !=
+                                            null)
+                                    ? Container(
+                                        margin: const EdgeInsets.all(12),
+                                        child: Image.asset(
+                                          CreditCardTypeIconAsset[cardType]!,
+                                          height: 32,
+                                          width: 32,
+                                          package: 'geideapay',
+                                        ))
+                                    : Icon(
+                                        Icons.call_to_action_rounded,
+                                        color: widget
+                                            .checkoutOptions.backgroundColor,
+                                      ),
                               ),
-                              child: Container(
-                                margin: const EdgeInsets.all(12),
-                                child: Text(
-                                  isArabic
-                                      ? '${widget.checkoutOptions.currency ?? ''}ادفع ${widget.checkoutOptions.amount}'
-                                      : 'Pay ${widget.checkoutOptions.amount} ${widget.checkoutOptions.currency ?? ''}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
+                              expiryDateDecoration: InputDecoration(
+                                labelText:
+                                    isArabic ? 'تاريخ الانتهاء' : 'Expiry Date',
+                                hintText: 'XX/XX',
+                                labelStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                hintStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                focusedBorder: border,
+                                enabledBorder: border,
+                              ),
+                              cvvCodeDecoration: InputDecoration(
+                                labelText: isArabic ? 'الرقم المرجعى' : 'CVV',
+                                hintText: 'XXX',
+                                labelStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                hintStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                focusedBorder: border,
+                                enabledBorder: border,
+                              ),
+                              cardHolderDecoration: InputDecoration(
+                                labelText: isArabic
+                                    ? 'اسم صاحب الكارت'
+                                    : 'Card Holder',
+                                labelStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                hintStyle: TextStyle(
+                                    color: widget.checkoutOptions.textColor),
+                                focusedBorder: border,
+                                enabledBorder: border,
+                              ),
+                            ),
+                          ),
+                          isArabic ? _customerEmailAR() : _customerEmailEN(),
+                          // ... reuse your same address + save card blocks
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)),
+                                  backgroundColor:
+                                      widget.checkoutOptions.payButtonColor,
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.all(12),
+                                  child: Text(
+                                    isArabic
+                                        ? '${widget.checkoutOptions.currency ?? ''}ادفع ${widget.checkoutOptions.amount}'
+                                        : 'Pay ${widget.checkoutOptions.amount} ${widget.checkoutOptions.currency ?? ''}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              onPressed: () {
-                                if (formKey.currentState!.validate()) {
-                                  setState(() => _checkoutInProgress = true);
-                                  Future.delayed(
-                                      const Duration(seconds: 8), () {
-                                    if (_shippingAddressSameAsBillingAddress) {
-                                      widget.checkoutOptions.shippingAddress =
-                                          widget.checkoutOptions.billingAddress;
-                                    }
-                                    setState(() {
-                                      _checkoutInProgress = false;
+                                onPressed: () {
+                                  if (formKey.currentState!.validate()) {
+                                    setState(() => _checkoutInProgress = true);
+                                    Future.delayed(const Duration(seconds: 8),
+                                        () {
+                                      if (_shippingAddressSameAsBillingAddress) {
+                                        widget.checkoutOptions.shippingAddress =
+                                            widget
+                                                .checkoutOptions.billingAddress;
+                                      }
+                                      setState(() {
+                                        _checkoutInProgress = false;
+                                      });
+                                      Navigator.pop(context, 'OK');
                                     });
-                                    Navigator.pop(context, 'OK');
-                                  });
-                                }
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0)),
-                                backgroundColor:
-                                    widget.checkoutOptions.cancelButtonColor,
+                                  }
+                                },
                               ),
-                              child: Container(
-                                margin: const EdgeInsets.all(12),
-                                child: Text(
-                                  isArabic ? 'الغاء' : 'Cancel',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0)),
+                                  backgroundColor:
+                                      widget.checkoutOptions.cancelButtonColor,
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.all(12),
+                                  child: Text(
+                                    isArabic ? 'الغاء' : 'Cancel',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
+                                onPressed: () {
+                                  Navigator.pop(context, 'CANCEL');
+                                },
                               ),
-                              onPressed: () {
-                                Navigator.pop(context, 'CANCEL');
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image(
-                                image: AssetImage('assets/logo.png',
-                                    package: 'geideapay'),
-                                width: 30,
-                                fit: BoxFit.fill),
-                            Text(
-                              'Powered by Geidea',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image(
+                                  image: AssetImage('assets/logo.png',
+                                      package: 'geideapay'),
+                                  width: 30,
+                                  fit: BoxFit.fill),
+                              Text(
+                                'Powered by Geidea',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        if (_checkoutInProgress)
-          Container(
-            color: Colors.black.withOpacity(0.5),
-            child: const Center(child: CircularProgressIndicator()),
-          ),
-      ],
-    ),
-  );
-}
+          if (_checkoutInProgress)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget buildCreditCardScreen_EN(BuildContext context) {
     return Scaffold(
