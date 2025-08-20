@@ -186,7 +186,6 @@ class CreditCardScreenState extends State<CreditCardScreen> {
                             ),
                           ),
                           isArabic ? _customerEmailAR() : _customerEmailEN(),
-                          // ... reuse your same address + save card blocks
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -288,272 +287,272 @@ class CreditCardScreenState extends State<CreditCardScreen> {
     );
   }
 
-  Widget buildCreditCardScreen_EN(BuildContext context) {
-    return Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Stack(
-          children: [
-            Container(
-              color: widget.checkoutOptions.backgroundColor,
-              child: SafeArea(
-                child: Column(
-                  children: <Widget>[
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 16, top: 10),
-                                child: Text("Payment",
-                                    style: TextStyle(
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold,
-                                        color:
-                                            widget.checkoutOptions.textColor))),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: CreditCardForm(
-                                formKey: formKey,
-                                rtl: false,
-                                obscureCvv: true,
-                                obscureNumber: false,
-                                cardNumber: widget.paymentCard.number,
-                                cvvCode: widget.paymentCard.cvc,
-                                isHolderNameVisible: true,
-                                isCardNumberVisible: true,
-                                isExpiryDateVisible: true,
-                                cardHolderName: widget.paymentCard.name,
-                                expiryYear: widget.paymentCard.expiryYear,
-                                expiryMonth: widget.paymentCard.expiryMonth,
-                                themeColor: Colors.blue,
-                                textColor: Colors.white,
-                                onChange: cardNumberChange,
-                                onCardEditComplete: () => widget
-                                    .onCardEditComplete!(widget.paymentCard),
-                                cardNumberDecoration: InputDecoration(
-                                  labelText: 'Number',
-                                  hintText: 'XXXX XXXX XXXX XXXX',
-                                  hintStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  labelStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  focusedBorder: border,
-                                  enabledBorder: border,
-                                  suffixIcon: (cardType != null &&
-                                          CreditCardTypeIconAsset[cardType] !=
-                                              null)
-                                      ? Container(
-                                          margin: const EdgeInsets.all(12),
-                                          child: Image.asset(
-                                            CreditCardTypeIconAsset[cardType]!,
-                                            height: 32,
-                                            width: 32,
-                                            package: 'geideapay',
-                                          ))
-                                      : Icon(
-                                          Icons.call_to_action_rounded,
-                                          color: widget
-                                              .checkoutOptions.backgroundColor,
-                                        ),
-                                ),
-                                expiryDateDecoration: InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  labelStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  focusedBorder: border,
-                                  enabledBorder: border,
-                                  labelText: 'Expired Date',
-                                  hintText: 'XX/XX',
-                                ),
-                                cvvCodeDecoration: InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  labelStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  focusedBorder: border,
-                                  enabledBorder: border,
-                                  labelText: 'CVV',
-                                  hintText: 'XXX',
-                                ),
-                                cardHolderDecoration: InputDecoration(
-                                  hintStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  labelStyle: TextStyle(
-                                      color: widget.checkoutOptions.textColor),
-                                  focusedBorder: border,
-                                  enabledBorder: border,
-                                  labelText: 'Card Holder',
-                                ),
-                                onCreditCardModelChange:
-                                    onCreditCardModelChange,
-                              ),
-                            ),
-                            _customerEmailEN(),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            (widget.checkoutOptions.showSaveCard != null &&
-                                    widget.checkoutOptions.showSaveCard!)
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      const Text(
-                                        'Save card?',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      Switch(
-                                        value: widget.saveCard,
-                                        inactiveTrackColor: Colors.grey,
-                                        activeColor: Colors.white,
-                                        activeTrackColor: Colors.green,
-                                        onChanged: (bool value) => setState(() {
-                                          widget.saveCard = value;
-                                        }),
-                                      ),
-                                    ],
-                                  )
-                                : Container(),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            (widget.checkoutOptions.showAddress != null &&
-                                    widget.checkoutOptions.showAddress!)
-                                ? addressForm_EN(true)
-                                : Container(),
-                            (widget.checkoutOptions.showAddress != null &&
-                                    widget.checkoutOptions.showAddress!)
-                                ? _shippingAddressCheckBoxEN()
-                                : Container(),
-                            (!_shippingAddressSameAsBillingAddress)
-                                ? addressForm_EN(false)
-                                : Container(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                      ),
-                                      backgroundColor:
-                                          widget.checkoutOptions.payButtonColor,
-                                    ),
-                                    child: Container(
-                                      margin: const EdgeInsets.all(12),
-                                      child: Text(
-                                        'Pay ${widget.checkoutOptions.amount} ${widget.checkoutOptions.currency != null ? widget.checkoutOptions.currency! : ''}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      if (formKey.currentState!.validate()) {
-                                        debugPrint('valid!');
-                                        setState(
-                                            () => _checkoutInProgress = true);
-                                        Future.delayed(
-                                            const Duration(seconds: 8), () {
-                                          if (_shippingAddressSameAsBillingAddress) {
-                                            widget.checkoutOptions
-                                                    .shippingAddress =
-                                                widget.checkoutOptions
-                                                    .billingAddress;
-                                          }
-                                          setState(() {
-                                            _checkoutInProgress = false;
-                                          });
-                                          Navigator.pop(context, 'OK');
-                                        });
-                                      } else {
-                                        debugPrint('invalid!');
-                                      }
-                                    },
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                      ),
-                                      backgroundColor: widget
-                                          .checkoutOptions.cancelButtonColor,
-                                    ),
-                                    child: Container(
-                                      margin: const EdgeInsets.all(12),
-                                      child: const Text(
-                                        'Cancel',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      Navigator.pop(context, 'CANCEL');
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image(
-                                    image: AssetImage('assets/logo.png',
-                                        package: 'geideapay'),
-                                    width: 30,
-                                    fit: BoxFit.fill),
-                                Text(
-                                  'Powered by Geidea',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                  ),
-                                )
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            _checkoutInProgress
-                ? Container(
-                    color: Colors.black.withOpacity(0.5),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : Container()
-          ],
-        ));
-  }
+  // Widget buildCreditCardScreen_EN(BuildContext context) {
+  //   return Scaffold(
+  //       resizeToAvoidBottomInset: false,
+  //       body: Stack(
+  //         children: [
+  //           Container(
+  //             color: widget.checkoutOptions.backgroundColor,
+  //             child: SafeArea(
+  //               child: Column(
+  //                 children: <Widget>[
+  //                   const SizedBox(
+  //                     height: 30,
+  //                   ),
+  //                   Expanded(
+  //                     child: SingleChildScrollView(
+  //                       child: Column(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: <Widget>[
+  //                           Padding(
+  //                               padding:
+  //                                   const EdgeInsets.only(left: 16, top: 10),
+  //                               child: Text("Payment",
+  //                                   style: TextStyle(
+  //                                       fontSize: 16.0,
+  //                                       fontWeight: FontWeight.bold,
+  //                                       color:
+  //                                           widget.checkoutOptions.textColor))),
+  //                           Directionality(
+  //                             textDirection: TextDirection.ltr,
+  //                             child: CreditCardForm(
+  //                               formKey: formKey,
+  //                               rtl: false,
+  //                               obscureCvv: true,
+  //                               obscureNumber: false,
+  //                               cardNumber: widget.paymentCard.number,
+  //                               cvvCode: widget.paymentCard.cvc,
+  //                               isHolderNameVisible: true,
+  //                               isCardNumberVisible: true,
+  //                               isExpiryDateVisible: true,
+  //                               cardHolderName: widget.paymentCard.name,
+  //                               expiryYear: widget.paymentCard.expiryYear,
+  //                               expiryMonth: widget.paymentCard.expiryMonth,
+  //                               themeColor: Colors.blue,
+  //                               textColor: Colors.white,
+  //                               onChange: cardNumberChange,
+  //                               onCardEditComplete: () => widget
+  //                                   .onCardEditComplete!(widget.paymentCard),
+  //                               cardNumberDecoration: InputDecoration(
+  //                                 labelText: 'Number',
+  //                                 hintText: 'XXXX XXXX XXXX XXXX',
+  //                                 hintStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 labelStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 focusedBorder: border,
+  //                                 enabledBorder: border,
+  //                                 suffixIcon: (cardType != null &&
+  //                                         CreditCardTypeIconAsset[cardType] !=
+  //                                             null)
+  //                                     ? Container(
+  //                                         margin: const EdgeInsets.all(12),
+  //                                         child: Image.asset(
+  //                                           CreditCardTypeIconAsset[cardType]!,
+  //                                           height: 32,
+  //                                           width: 32,
+  //                                           package: 'geideapay',
+  //                                         ))
+  //                                     : Icon(
+  //                                         Icons.call_to_action_rounded,
+  //                                         color: widget
+  //                                             .checkoutOptions.backgroundColor,
+  //                                       ),
+  //                               ),
+  //                               expiryDateDecoration: InputDecoration(
+  //                                 hintStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 labelStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 focusedBorder: border,
+  //                                 enabledBorder: border,
+  //                                 labelText: 'Expired Date',
+  //                                 hintText: 'XX/XX',
+  //                               ),
+  //                               cvvCodeDecoration: InputDecoration(
+  //                                 hintStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 labelStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 focusedBorder: border,
+  //                                 enabledBorder: border,
+  //                                 labelText: 'CVV',
+  //                                 hintText: 'XXX',
+  //                               ),
+  //                               cardHolderDecoration: InputDecoration(
+  //                                 hintStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 labelStyle: TextStyle(
+  //                                     color: widget.checkoutOptions.textColor),
+  //                                 focusedBorder: border,
+  //                                 enabledBorder: border,
+  //                                 labelText: 'Card Holder',
+  //                               ),
+  //                               onCreditCardModelChange:
+  //                                   onCreditCardModelChange,
+  //                             ),
+  //                           ),
+  //                           _customerEmailEN(),
+  //                           const SizedBox(
+  //                             height: 10,
+  //                           ),
+  //                           (widget.checkoutOptions.showSaveCard != null &&
+  //                                   widget.checkoutOptions.showSaveCard!)
+  //                               ? Row(
+  //                                   mainAxisAlignment: MainAxisAlignment.center,
+  //                                   children: <Widget>[
+  //                                     const Text(
+  //                                       'Save card?',
+  //                                       style: TextStyle(
+  //                                         color: Colors.white,
+  //                                         fontSize: 18,
+  //                                       ),
+  //                                     ),
+  //                                     Switch(
+  //                                       value: widget.saveCard,
+  //                                       inactiveTrackColor: Colors.grey,
+  //                                       activeColor: Colors.white,
+  //                                       activeTrackColor: Colors.green,
+  //                                       onChanged: (bool value) => setState(() {
+  //                                         widget.saveCard = value;
+  //                                       }),
+  //                                     ),
+  //                                   ],
+  //                                 )
+  //                               : Container(),
+  //                           const SizedBox(
+  //                             height: 10,
+  //                           ),
+  //                           (widget.checkoutOptions.showAddress != null &&
+  //                                   widget.checkoutOptions.showAddress!)
+  //                               ? addressForm_EN(true)
+  //                               : Container(),
+  //                           (widget.checkoutOptions.showAddress != null &&
+  //                                   widget.checkoutOptions.showAddress!)
+  //                               ? _shippingAddressCheckBoxEN()
+  //                               : Container(),
+  //                           (!_shippingAddressSameAsBillingAddress)
+  //                               ? addressForm_EN(false)
+  //                               : Container(),
+  //                           Row(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               Padding(
+  //                                 padding: const EdgeInsets.all(8.0),
+  //                                 child: ElevatedButton(
+  //                                   style: ElevatedButton.styleFrom(
+  //                                     shape: RoundedRectangleBorder(
+  //                                       borderRadius:
+  //                                           BorderRadius.circular(8.0),
+  //                                     ),
+  //                                     backgroundColor:
+  //                                         widget.checkoutOptions.payButtonColor,
+  //                                   ),
+  //                                   child: Container(
+  //                                     margin: const EdgeInsets.all(12),
+  //                                     child: Text(
+  //                                       'Pay ${widget.checkoutOptions.amount} ${widget.checkoutOptions.currency != null ? widget.checkoutOptions.currency! : ''}',
+  //                                       style: const TextStyle(
+  //                                         color: Colors.white,
+  //                                         fontSize: 14,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                   onPressed: () {
+  //                                     if (formKey.currentState!.validate()) {
+  //                                       debugPrint('valid!');
+  //                                       setState(
+  //                                           () => _checkoutInProgress = true);
+  //                                       Future.delayed(
+  //                                           const Duration(seconds: 8), () {
+  //                                         if (_shippingAddressSameAsBillingAddress) {
+  //                                           widget.checkoutOptions
+  //                                                   .shippingAddress =
+  //                                               widget.checkoutOptions
+  //                                                   .billingAddress;
+  //                                         }
+  //                                         setState(() {
+  //                                           _checkoutInProgress = false;
+  //                                         });
+  //                                         Navigator.pop(context, 'OK');
+  //                                       });
+  //                                     } else {
+  //                                       debugPrint('invalid!');
+  //                                     }
+  //                                   },
+  //                                 ),
+  //                               ),
+  //                               Padding(
+  //                                 padding: const EdgeInsets.all(8.0),
+  //                                 child: ElevatedButton(
+  //                                   style: ElevatedButton.styleFrom(
+  //                                     shape: RoundedRectangleBorder(
+  //                                       borderRadius:
+  //                                           BorderRadius.circular(8.0),
+  //                                     ),
+  //                                     backgroundColor: widget
+  //                                         .checkoutOptions.cancelButtonColor,
+  //                                   ),
+  //                                   child: Container(
+  //                                     margin: const EdgeInsets.all(12),
+  //                                     child: const Text(
+  //                                       'Cancel',
+  //                                       style: TextStyle(
+  //                                         color: Colors.white,
+  //                                         fontSize: 14,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                   onPressed: () {
+  //                                     Navigator.pop(context, 'CANCEL');
+  //                                   },
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           const SizedBox(
+  //                             height: 20,
+  //                           ),
+  //                           const Row(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               Image(
+  //                                   image: AssetImage('assets/logo.png',
+  //                                       package: 'geideapay'),
+  //                                   width: 30,
+  //                                   fit: BoxFit.fill),
+  //                               Text(
+  //                                 'Powered by Geidea',
+  //                                 style: TextStyle(
+  //                                   color: Colors.white,
+  //                                   fontSize: 18,
+  //                                 ),
+  //                               )
+  //                             ],
+  //                           ),
+  //                           const SizedBox(
+  //                             height: 20,
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //           _checkoutInProgress
+  //               ? Container(
+  //                   color: Colors.black.withOpacity(0.5),
+  //                   child: const Center(
+  //                     child: CircularProgressIndicator(),
+  //                   ),
+  //                 )
+  //               : Container()
+  //         ],
+  //       ));
+  // }
 
   addressForm_EN(bool isBilling) {
     return Padding(
