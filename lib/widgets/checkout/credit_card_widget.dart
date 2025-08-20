@@ -630,216 +630,210 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
               element.cardType == currentCardType)
           .toList();
 }
+
 class MaskedTextController extends TextEditingController {
   MaskedTextController({
     String? text,
     required this.mask,
     Map<String, RegExp>? translator,
-    this.isRtl = false,
-  }) : super(text: text) {
-    this.translator = translator ?? MaskedTextController.getDefaultTranslator();
-    _isUpdating = false;
-
-    addListener(() {
-      // Prevent infinite loop by checking if we're already updating
-      if (_isUpdating) return;
-      
-      final String previous = _lastUpdatedText;
-      final int previousCursorPos = selection.baseOffset;
-
-      if (beforeChange(previous, this.text)) {
-        _updateText(this.text, previousCursorPos);
-        afterChange(previous, this.text);
-      } else {
-        // Restore previous text without triggering listener
-        _isUpdating = true;
-        super.text = _lastUpdatedText;
-        _setCursorPosition(previousCursorPos);
-        _isUpdating = false;
-      }
-    });
-
-    _updateText(this.text);
+  }) : translator = translator ?? MaskedTextController.getDefaultTranslator() {
+    if (text != null) {
+      // Initialize formatted
+      final init = _formatValue(TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      ));
+      super.value = init;
+    }
   }
 
   String mask;
-  bool isRtl;
-  late Map<String, RegExp> translator;
-  bool _isUpdating = false; // Flag to prevent infinite loops
+  final Map<String, RegExp> translator;
+  bool _isApplying = false;
 
-  Function afterChange = (String previous, String next) {};
-  Function beforeChange = (String previous, String next) => true;
+  /// Override the value setter so we format + place cursor atomically.
+  @override
+  set value(TextEditingValue newValue) {
+    if (_isApplying) {
+      super.value = newValue;
+      return;
+    }
+    _isApplying = true;
+    final formatted = _formatValue(newValue);
+    super.value = formatted;
+    _isApplying = false;
+  }
 
-  String _lastUpdatedText = '';
+  /// If you change mask at runtime.
+  void updateMask(String newMask, {bool moveCursorToEnd = true}) {
+    mask = newMask;
+    final formatted = _formatValue(super.value);
+    super.value = formatted.copyWith(
+      selection: TextSelection.collapsed(
+        offset: moveCursorToEnd ? formatted.text.length : formatted.selection.baseOffset,
+      ),
+    );
+  }
 
-  void _updateText(String text, [int? previousCursorPos]) {
-    _isUpdating = true;
-    
-    try {
-      if (text.isNotEmpty) {
-        final String normalizedText = _normalizeDigits(text);
-        final String maskedText = _applyMask(mask, normalizedText);
-        final int cursorOffset = _calculateCursorPosition(
-          normalizedText, 
-          maskedText, 
-          previousCursorPos
-        );
+  /// Public helper for programmatic updates (keeps cursor correct).
+  void updateText(String newText) {
+    value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
 
-        super.text = maskedText;
-        _setCursorPosition(cursorOffset);
-      } else {
-        super.text = '';
-        _setCursorPosition(0);
+  // -------------------- Core formatting --------------------
+
+  TextEditingValue _formatValue(TextEditingValue input) {
+    final normalized = _normalizeDigits(input.text);
+
+    // Clamp/normalize selection
+    final int origCursor =
+        input.selection.isValid ? input.selection.baseOffset : normalized.length;
+    final int safeOrigCursor = origCursor.clamp(0, normalized.length);
+
+    // Raw text = remove mask literals from the *incoming* text
+    final String rawAll = _unmask(normalized);
+    final String rawBeforeCursor = _unmask(normalized.substring(0, safeOrigCursor));
+    final int rawCursorCount = rawBeforeCursor.length;
+
+    // Apply mask and compute the masked cursor index corresponding to rawCursorCount
+    final _MaskResult res = _applyMaskWithCursor(rawAll, rawCursorCount);
+
+    return TextEditingValue(
+      text: res.text,
+      selection: TextSelection.collapsed(offset: res.cursor),
+      composing: TextRange.empty,
+    );
+  }
+
+  /// Remove mask literals from a string so only translator-matching chars remain.
+  String _unmask(String source) {
+    if (source.isEmpty) return '';
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < source.length; i++) {
+      final ch = source[i];
+      // A char is "raw" if it can match at least one translator token.
+      bool matchesAny = false;
+      for (final entry in translator.entries) {
+        if (entry.value.hasMatch(ch)) {
+          matchesAny = true;
+          break;
+        }
       }
-
-      _lastUpdatedText = super.text;
-    } finally {
-      _isUpdating = false;
+      if (matchesAny) buffer.write(ch);
     }
+    return buffer.toString();
   }
 
-  // Public method that external code can call
-  void updateText(String text, [int? previousCursorPos]) {
-    if (!_isUpdating) {
-      _updateText(text, previousCursorPos);
-    }
-  }
+  /// Builds masked text and the cursor position that corresponds to [rawCursorCount].
+  _MaskResult _applyMaskWithCursor(String raw, int rawCursorCount) {
+    final res = StringBuffer();
+    int maskedIndex = 0;
+    int rawIndex = 0;
+    int cursorMaskedIndex = 0;
+    bool cursorSet = false;
 
-  int _calculateCursorPosition(
-      String originalText, String maskedText, int? previousCursorPos) {
-    if (previousCursorPos == null) {
-      return maskedText.length;
-    }
-
-    if (isRtl) {
-      final int distanceFromEnd = _lastUpdatedText.length - previousCursorPos;
-      return (maskedText.length - distanceFromEnd).clamp(0, maskedText.length);
+    // Helper to set cursor once when we've consumed `rawCursorCount` raw chars
+    void trySetCursor() {
+      if (!cursorSet && rawIndex == rawCursorCount) {
+        cursorMaskedIndex = maskedIndex;
+        cursorSet = true;
+      }
     }
 
-    return previousCursorPos.clamp(0, maskedText.length);
-  }
+    for (int m = 0; m < mask.length; m++) {
+      final maskCh = mask[m];
+      final isToken = translator.containsKey(maskCh);
 
-  void _setCursorPosition(int position) {
-    if (_isUpdating) {
-      final int safePosition = position.clamp(0, text.length);
-      super.selection = TextSelection.fromPosition(
-        TextPosition(offset: safePosition)
-      );
+      if (isToken) {
+        // Consume next raw char that matches this token
+        while (rawIndex < raw.length) {
+          final rawCh = raw[rawIndex];
+
+          if (translator[maskCh]!.hasMatch(rawCh)) {
+            // Before writing, if our cursor is supposed to be here, set it.
+            trySetCursor();
+
+            res.write(rawCh);
+            maskedIndex++;
+            rawIndex++;
+            break; // move to next mask char
+          } else {
+            // Skip non-matching raw char (defensive)
+            rawIndex++;
+          }
+        }
+
+        if (rawIndex >= raw.length) {
+          // No more raw chars; stop expanding tokens. Do not append trailing literals.
+          break;
+        }
+      } else {
+        // Literal: write only if we've already placed at least one raw char
+        // or we *will* place more (prevents leading literal when field empty).
+        if (rawIndex > 0 && rawIndex <= raw.length) {
+          // If cursor should be before the next token and we are about to insert a literal,
+          // place the cursor *after* this literal (feels natural when typing).
+          trySetCursor();
+
+          res.write(maskCh);
+          maskedIndex++;
+        } else {
+          // If we haven't consumed any raw yet, we don't emit leading literals.
+          // Continue to next mask character without changing indices.
+          continue;
+        }
+      }
     }
-  }
 
-  void updateMask(String mask, {bool moveCursorToEndbool = true}) {
-    this.mask = mask;
-    _updateText(text);
-    if (moveCursorToEndbool) {
-      moveCursorToEnd();
+    // If we still have raw left and mask ended (e.g., shorter mask), append remaining raw that still matches "last token" type.
+    // In practice for strict masks like credit card / expiry / cvv this won't run,
+    // but it's here as a safety net for looser masks.
+    while (rawIndex < raw.length) {
+      res.write(raw[rawIndex]);
+      maskedIndex++;
+      rawIndex++;
     }
+
+    // If cursor not set during build, put it at the end.
+    if (!cursorSet) cursorMaskedIndex = res.length;
+
+    return _MaskResult(text: res.toString(), cursor: cursorMaskedIndex);
   }
 
-  void moveCursorToEnd() {
-    if (!_isUpdating) {
-      _isUpdating = true;
-      final String currentText = _lastUpdatedText;
-      super.selection = TextSelection.fromPosition(
-        TextPosition(offset: currentText.length)
-      );
-      _isUpdating = false;
-    }
-  }
-
-  @override
-  set text(String newText) {
-    if (!_isUpdating && super.text != newText) {
-      _updateText(newText);
-    }
-  }
-
-  @override
-  set selection(TextSelection newSelection) {
-    if (!_isUpdating) {
-      super.selection = newSelection;
-    }
-  }
-
-  static Map<String, RegExp> getDefaultTranslator() {
-    return <String, RegExp>{
-      'A': RegExp(r'[A-Za-z\u0600-\u06FF\u0750-\u077F]'), // Include Arabic characters
-      '0': RegExp(r'[0-9\u0660-\u0669]'), // Include Arabic-Indic digits
-      '@': RegExp(r'[A-Za-z0-9\u0600-\u06FF\u0750-\u077F\u0660-\u0669]'), // Include Arabic chars and digits
-      '*': RegExp(r'.*')
-    };
-  }
-
-  /// Normalize Arabic-Indic digits to Western 0-9
+  /// Normalize Arabic-Indic digits to Western [0-9]
   String _normalizeDigits(String input) {
+    if (input.isEmpty) return input;
     const arabicIndic = [
       '\u0660', '\u0661', '\u0662', '\u0663', '\u0664',
       '\u0665', '\u0666', '\u0667', '\u0668', '\u0669'
     ];
-    String output = input;
+    String out = input;
     for (int i = 0; i < 10; i++) {
-      output = output.replaceAll(arabicIndic[i], i.toString());
+      out = out.replaceAll(arabicIndic[i], i.toString());
     }
-    return output;
+    return out;
   }
 
-  String _applyMask(String? mask, String value) {
-    if (mask == null || mask.isEmpty) return value;
-
-    String result = '';
-    int maskCharIndex = 0;
-    int valueCharIndex = 0;
-
-    String cleanValue = _removeMaskCharacters(value, mask);
-
-    while (maskCharIndex < mask.length && valueCharIndex < cleanValue.length) {
-      final String maskChar = mask[maskCharIndex];
-      final String valueChar = cleanValue[valueCharIndex];
-
-      if (maskChar == valueChar) {
-        result += maskChar;
-        valueCharIndex++;
-        maskCharIndex++;
-        continue;
-      }
-
-      if (translator.containsKey(maskChar)) {
-        if (translator[maskChar]!.hasMatch(valueChar)) {
-          result += valueChar;
-          valueCharIndex++;
-        } else {
-          valueCharIndex++;
-          continue;
-        }
-        maskCharIndex++;
-      } else {
-        result += maskChar;
-        maskCharIndex++;
-      }
-    }
-
-    return result;
-  }
-
-  String _removeMaskCharacters(String value, String mask) {
-    String result = '';
-    Set<String> maskChars = <String>{};
-    
-    for (int i = 0; i < mask.length; i++) {
-      String char = mask[i];
-      if (!translator.containsKey(char)) {
-        maskChars.add(char);
-      }
-    }
-    
-    for (int i = 0; i < value.length; i++) {
-      String char = value[i];
-      if (!maskChars.contains(char)) {
-        result += char;
-      }
-    }
-    
-    return result;
+  static Map<String, RegExp> getDefaultTranslator() {
+    return <String, RegExp>{
+      'A': RegExp(r'[A-Za-z\u0600-\u06FF\u0750-\u077F]'),        // letters (Latin + Arabic)
+      '0': RegExp(r'[0-9\u0660-\u0669]'),                         // digits (Western + Arabic-Indic)
+      '@': RegExp(r'[A-Za-z0-9\u0600-\u06FF\u0750-\u077F\u0660-\u0669]'),
+      '*': RegExp(r'.*'),
+    };
   }
 }
+
+class _MaskResult {
+  final String text;
+  final int cursor;
+  _MaskResult({required this.text, required this.cursor});
+}
+
+
+
 enum CardType { otherBrand, mastercard, visa, americanExpress, discover, mada }

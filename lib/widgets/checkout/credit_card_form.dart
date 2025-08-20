@@ -113,19 +113,12 @@ class _CreditCardFormState extends State<CreditCardForm> {
   void initState() {
     super.initState();
     isRTL = widget.rtl;
-    _cardNumberController = MaskedTextController(
-      mask: '0000 0000 0000 0000',
-      isRtl: isRTL,
-    );
-    _expiryDateController = MaskedTextController(
-      mask: '00/00',
-      isRtl: isRTL,
-    );
+    // in initState
+    _cardNumberController = MaskedTextController(mask: '0000 0000 0000 0000');
+    _expiryDateController = MaskedTextController(mask: '00/00');
+    _cvvCodeController =
+        MaskedTextController(mask: '000'); // usually 3 (Amex is 4 if you need)
     _cardHolderNameController = TextEditingController();
-    _cvvCodeController = MaskedTextController(
-      mask: '0000',
-      isRtl: isRTL,
-    );
 
     createCreditCardModel();
 
@@ -184,7 +177,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
     _expiryDateController.dispose();
     _cardHolderNameController.dispose();
     _cvvCodeController.dispose();
-    
+
     cardHolderNode.dispose();
     cvvFocusNode.dispose();
     expiryDateNode.dispose();
@@ -214,8 +207,9 @@ class _CreditCardFormState extends State<CreditCardForm> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 margin: const EdgeInsets.only(left: 16, top: 16, right: 16),
                 child: TextFormField(
-                  obscureText: widget.obscureNumber,
                   controller: _cardNumberController,
+                  textDirection: TextDirection.ltr,
+                  obscureText: widget.obscureNumber,
                   cursorColor: widget.cursorColor ?? themeColor,
                   onEditingComplete: () {
                     if (widget.onCardEditComplete != null) {
@@ -256,6 +250,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
                           const EdgeInsets.only(left: 16, top: 8, right: 16),
                       child: TextFormField(
                         controller: _expiryDateController,
+                        textDirection: TextDirection.ltr,
                         cursorColor: widget.cursorColor ?? themeColor,
                         focusNode: expiryDateNode,
                         onEditingComplete: () {
@@ -344,6 +339,8 @@ class _CreditCardFormState extends State<CreditCardForm> {
                 child: TextFormField(
                   controller: _cardHolderNameController,
                   cursorColor: widget.cursorColor ?? themeColor,
+                    textDirection: Directionality.of(context),
+
                   focusNode: cardHolderNode,
                   style: TextStyle(
                     color: widget.textColor,
