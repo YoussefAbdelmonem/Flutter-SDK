@@ -297,6 +297,7 @@ class _CreditCardFormState extends State<CreditCardForm> {
                     margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
                     child: TextFormField(
                       obscureText: widget.obscureCvv,
+                      textDirection: TextDirection.ltr,
                       focusNode: cvvFocusNode,
                       controller: _cvvCodeController,
                       cursorColor: widget.cursorColor ?? themeColor,
